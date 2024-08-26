@@ -34,8 +34,11 @@ interface RangeIndicator {
 }
 
 function App() {
-	const [count, setCount] = useState(0);
+	const [angleErrorRange, setAngleErrorRange] = useState(Math.PI / 2); // 30 degrees error range
+	const [redirectInterval, setRedirectInterval] = useState(600);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
+	const gameLoopRef = useRef<number | null>(null);
+	const redirectIntervalRef = useRef<number | null>(null);
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -76,10 +79,6 @@ function App() {
 				angle: Math.random() * Math.PI * 2, // Random angle between 0 and 2π
 			});
 		}
-
-		// Game settings
-		const redirectInterval = 2000; // Redirect every 2 seconds
-		const angleErrorRange = Math.PI / 6; // 30 degrees error range
 
 		// Helper functions
 		function distance(x1: number, y1: number, x2: number, y2: number): number {
@@ -124,7 +123,7 @@ function App() {
 
 		const rangeIndicator: RangeIndicator = {
 			angle: 0, // This will always point towards the planet
-			range: Math.PI / 6 // 30 degrees error range (adjust as needed)
+			range: angleErrorRange,
 		};
 
 		// Main game loop
@@ -212,21 +211,23 @@ function App() {
 				resetGame();
 			}
 
-			requestAnimationFrame(gameLoop);
+			gameLoopRef.current = requestAnimationFrame(gameLoop);
 		}
 
 		// Redirect rocket periodically
-		const redirectRocket = setInterval(() => {
-			const targetAngle = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
-			const error = (Math.random() * 2 - 1) * angleErrorRange;
-			const intendedAngle = targetAngle + error;
+		function startRedirectInterval() {
+			redirectIntervalRef.current = setInterval(() => {
+				const targetAngle = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
+				const error = (Math.random() * 2 - 1) * (angleErrorRange / 2);
+				const intendedAngle = targetAngle + error;
 
-			// Update rocket angle
-			rocket.angle = intendedAngle;
+				// Update rocket angle
+				rocket.angle = intendedAngle;
 
-			// Update direction indicator
-			directionIndicator.angle = intendedAngle;
-		}, redirectInterval);
+				// Update direction indicator
+				directionIndicator.angle = intendedAngle;
+			}, redirectInterval);
+		}
 
 		// Reset game function
 		function resetGame() {
@@ -275,17 +276,54 @@ function App() {
 
 		// Start the game
 		gameLoop();
+		startRedirectInterval();
 
 		// Cleanup function
 		return () => {
-			clearInterval(redirectRocket);
+			if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
+			if (redirectIntervalRef.current) clearInterval(redirectIntervalRef.current);
 		};
-	}, []); // Empty dependency array ensures this effect runs once on mount
+	}, [angleErrorRange, redirectInterval]);
+
+	const handleErrorRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setAngleErrorRange((parseFloat(e.target.value) * Math.PI) / 180);
+	};
+
+	const handleIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setRedirectInterval(parseFloat(e.target.value));
+	};
 
 	return (
 		<>
 			<h1>Mini Rocket Sim</h1>
 			<canvas ref={canvasRef} id="gameCanvas"></canvas>
+			<div className="mt-5 flex flex-col items-center">
+				<label className="flex items-center mb-2.5">
+					Error Range (degrees):
+					<input
+						type="range"
+						min="0"
+						max="180"
+						value={(angleErrorRange * 180) / Math.PI}
+						onChange={handleErrorRangeChange}
+						className="mx-2.5"
+					/>
+					{((angleErrorRange * 180) / Math.PI).toFixed(1)}°
+				</label>
+				<label className="flex items-center mb-2.5">
+					Redirect Interval (ms):
+					<input
+						type="range"
+						min="100"
+						max="2000"
+						step="100"
+						value={redirectInterval}
+						onChange={handleIntervalChange}
+						className="mx-2.5"
+					/>
+					{redirectInterval}ms
+				</label>
+			</div>
 		</>
 	);
 }
