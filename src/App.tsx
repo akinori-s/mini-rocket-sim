@@ -77,7 +77,7 @@ function calculateAngle(x1: number, y1: number, x2: number, y2: number): number 
 }
 
 function App() {
-	const [angleErrorRange, setAngleErrorRange] = useState<number>(Math.PI / 2); // 30 degrees error range
+	const [angleErrorRange, setAngleErrorRange] = useState<number>(Math.PI / 2);
 	const [redirectInterval, setRedirectInterval] = useState<number>(600);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -94,8 +94,8 @@ function App() {
 
 		// Game objects
 		const rocket: Rocket = {
-			x: Math.random() * canvas.width,
-			y: Math.random() * canvas.height,
+			x: canvas.width * 1 / 5,
+			y: canvas.height / 2,
 			radius: 20,
 			angle: 0,
 			speed: 2,
@@ -103,13 +103,13 @@ function App() {
 		};
 
 		const planet: Planet = {
-			x: Math.random() * canvas.width,
-			y: Math.random() * canvas.height,
+			x: canvas.width * 4 / 5,
+			y: canvas.height / 2,
 			radius: 30
 		};
 
 		const obstacles: Obstacle[] = [];
-		const numObstacles = 250;
+		const numObstacles = 300;
 		rocket.intendedDirection = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
 
 		// Create obstacles
@@ -126,28 +126,26 @@ function App() {
 
 		// New collision response function
 		function resolveCollision(obj1: Rocket | Obstacle, obj2: Rocket | Obstacle): void {
-			const angle = calculateAngle(obj1.x, obj1.y, obj2.x, obj2.y);
-			const overlap = obj1.radius + obj2.radius - distance(obj1.x, obj1.y, obj2.x, obj2.y);
+			const collisionAngle = calculateAngle(obj1.x, obj1.y, obj2.x, obj2.y);
+			const overlap = obj1.radius + obj2.radius - distance(obj1.x, obj1.y, obj2.x, obj2.y) + 0.5;
 
 			// Move objects apart
-			obj1.x -= overlap * Math.cos(angle) / 2;
-			obj1.y -= overlap * Math.sin(angle) / 2;
-			obj2.x += overlap * Math.cos(angle) / 2;
-			obj2.y += overlap * Math.sin(angle) / 2;
+			obj1.x -= overlap * Math.cos(collisionAngle) / 2;
+			obj1.y -= overlap * Math.sin(collisionAngle) / 2;
+			obj2.x += overlap * Math.cos(collisionAngle) / 2;
+			obj2.y += overlap * Math.sin(collisionAngle) / 2;
 
-			// Calculate new angles
-			const temp = obj1.angle;
-			obj1.angle = obj2.angle;
-			obj2.angle = temp;
+			// Calculate new angles using reflection
+			const newAngle1 = 2 * collisionAngle - obj1.angle - Math.PI;
+			const newAngle2 = 2 * collisionAngle - obj2.angle - Math.PI;
 
-			// Slightly randomize angles to prevent objects from getting stuck
-			obj1.angle += (Math.random() - 0.5) * Math.PI / 6; // ±15 degrees
-			obj2.angle += (Math.random() - 0.5) * Math.PI / 6; // ±15 degrees
+			// Update angles
+			obj1.angle = newAngle1;
+			obj2.angle = newAngle2;
 
 			// Ensure angles stay within 0 to 2π
 			obj1.angle = (obj1.angle + 2 * Math.PI) % (2 * Math.PI);
 			obj2.angle = (obj2.angle + 2 * Math.PI) % (2 * Math.PI);
-
 		}
 
 		// Main game loop
@@ -187,6 +185,22 @@ function App() {
 				// Check for collision with rocket
 				if (distance(rocket.x, rocket.y, obstacle.x, obstacle.y) < rocket.radius + obstacle.radius) {
 					resolveCollision(rocket, obstacle);
+				}
+
+				if (distance(planet.x, planet.y, obstacle.x, obstacle.y) < planet.radius + obstacle.radius) {
+					// Calculate the angle of collision
+					const collisionAngle = calculateAngle(planet.x, planet.y, obstacle.x, obstacle.y);
+					// Calculate the angle of the obstacle's current movement
+					const movementAngle = obstacle.angle;
+					// Calculate the new angle after collision (reflection)
+					const newAngle = 2 * collisionAngle - movementAngle - Math.PI;
+					// Update the obstacle's angle
+					obstacle.angle = newAngle;
+
+					// Move the obstacle outside the planet's radius to prevent sticking
+					const separationDistance = planet.radius + obstacle.radius;
+					obstacle.x = planet.x + Math.cos(collisionAngle) * separationDistance;
+					obstacle.y = planet.y + Math.sin(collisionAngle) * separationDistance;
 				}
 			}
 
@@ -253,10 +267,10 @@ function App() {
 		// Reset game function
 		function resetGame() {
 			if (!canvas) return ;
-			rocket.x = Math.random() * canvas.width;
-			rocket.y = Math.random() * canvas.height;
-			planet.x = Math.random() * canvas.width;
-			planet.y = Math.random() * canvas.height;
+			rocket.x = canvas.width * 1 / 5;
+			rocket.y = canvas.height / 2;
+			planet.x = canvas.width * 4 / 5;
+			planet.y = canvas.height / 2;
 		}
 
 		// Start the game
