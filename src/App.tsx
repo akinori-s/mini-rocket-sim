@@ -37,11 +37,11 @@ function drawDirectionIndicator(
   ctx.rotate(angle);
 
   ctx.beginPath();
-  ctx.moveTo(30, 0);
-  ctx.lineTo(50, 0);
-  ctx.lineTo(45, -7);
-  ctx.moveTo(50, 0);
-  ctx.lineTo(45, 7);
+  ctx.moveTo(40, 0);
+  ctx.lineTo(60, 0);
+  ctx.lineTo(55, -7);
+  ctx.moveTo(60, 0);
+  ctx.lineTo(55, 7);
   ctx.strokeStyle = 'orange';
   ctx.lineWidth = 4;
   ctx.stroke();
@@ -106,9 +106,9 @@ function App() {
 		const rocket: Rocket = {
 			x: canvas.width * 1 / 5,
 			y: canvas.height / 2,
-			radius: 20,
+			radius: 35,
 			angle: 0,
-			speed: 2,
+			speed: 2.1,
 			intendedDirection: 0,
 			trail: [],
 		};
@@ -116,11 +116,11 @@ function App() {
 		const planet: Planet = {
 			x: canvas.width * 4 / 5,
 			y: canvas.height / 2,
-			radius: 30
+			radius: 50
 		};
 
 		const obstacles: Obstacle[] = [];
-		const numObstacles = 300;
+		const numObstacles = 170;
 		rocket.intendedDirection = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
 
 		// Create obstacles
@@ -129,8 +129,8 @@ function App() {
 				id: i,
 				x: Math.random() * canvas.width,
 				y: Math.random() * canvas.height,
-				radius: 13,
-				speed: 1,
+				radius: 6,
+				speed: 1.2,
 				angle: Math.random() * Math.PI * 2,
 			});
 		}
@@ -273,6 +273,11 @@ function App() {
 					imageSize
 				);
 				ctx.restore();
+				ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)'; // Semi-transparent black
+				ctx.beginPath();
+				ctx.arc(rocket.x, rocket.y, rocket.radius, 0, Math.PI * 2);
+				ctx.lineWidth = 0.4;
+				ctx.stroke();
 			} else {
 				// Fallback to circle if image is not loaded
 				ctx.fillStyle = 'red';
@@ -295,7 +300,7 @@ function App() {
 			let rangeIndicatorAngle = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
 
       drawRangeIndicator(ctx, rocket.x, rocket.y, rangeIndicatorAngle, angleErrorRange);
-      drawDirectionIndicator(ctx, rocket.x, rocket.y, rocket.intendedDirection);
+      // drawDirectionIndicator(ctx, rocket.x, rocket.y, rocket.intendedDirection);
 
 			// Check for planet collision
 			if (distance(rocket.x, rocket.y, planet.x, planet.y) < rocket.radius + planet.radius) {
