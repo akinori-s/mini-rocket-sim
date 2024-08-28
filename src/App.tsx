@@ -8,6 +8,7 @@ interface Rocket {
 	angle: number;
 	speed: number;
 	intendedDirection: number;
+	trail: { x: number; y: number }[];
 }
 
 interface Planet {
@@ -100,6 +101,7 @@ function App() {
 			angle: 0,
 			speed: 2,
 			intendedDirection: 0,
+			trail: [],
 		};
 
 		const planet: Planet = {
@@ -158,6 +160,14 @@ function App() {
 			// Move rocket
 			rocket.x += Math.cos(rocket.angle) * rocket.speed;
 			rocket.y += Math.sin(rocket.angle) * rocket.speed;
+
+			// Add current position to the trail
+			rocket.trail.push({ x: rocket.x, y: rocket.y });
+
+			// Limit the trail length (adjust 100 to change the trail length)
+			// if (rocket.trail.length > 100) {
+			// 	rocket.trail.shift();
+			// }
 
 			// Move and check collisions for obstacles
 			for (let obstacle of obstacles) {
@@ -234,6 +244,16 @@ function App() {
 			ctx.arc(rocket.x, rocket.y, rocket.radius, 0, Math.PI * 2);
 			ctx.fill();
 
+			// Draw rocket trail
+			ctx.beginPath();
+			ctx.moveTo(rocket.trail[0].x, rocket.trail[0].y);
+			for (let i = 1; i < rocket.trail.length; i++) {
+				ctx.lineTo(rocket.trail[i].x, rocket.trail[i].y);
+			}
+			ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)'; // Semi-transparent red
+			ctx.lineWidth = 2;
+			ctx.stroke();
+
 			// Update range indicator to always point towards the planet
 			let rangeIndicatorAngle = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
 
@@ -269,6 +289,7 @@ function App() {
 			if (!canvas) return ;
 			rocket.x = canvas.width * 1 / 5;
 			rocket.y = canvas.height / 2;
+			rocket.trail = []; // Clear the trail when resetting
 			planet.x = canvas.width * 4 / 5;
 			planet.y = canvas.height / 2;
 		}
