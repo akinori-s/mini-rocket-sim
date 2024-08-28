@@ -7,6 +7,7 @@ interface Rocket {
 	radius: number;
 	angle: number;
 	speed: number;
+	intendedDirection: number;
 }
 
 interface Planet {
@@ -24,23 +25,64 @@ interface Obstacle {
 	angle: number;
 }
 
-interface DirectionIndicator {
-	angle: number;
+function drawDirectionIndicator(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  angle: number
+) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(40, 0);
+  ctx.lineTo(35, -7);
+  ctx.moveTo(40, 0);
+  ctx.lineTo(35, 7);
+  ctx.strokeStyle = 'orange';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  ctx.restore();
 }
 
-interface RangeIndicator {
-	angle: number;
-	range: number;
+function drawRangeIndicator(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  angle: number,
+  range: number
+) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle - range / 2);
+
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, 70, 0, range);
+  ctx.fillStyle = 'rgba(143, 235, 52, 0.22)';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function distance(x1: number, y1: number, x2: number, y2: number): number {
+	return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+}
+
+function calculateAngle(x1: number, y1: number, x2: number, y2: number): number {
+	return Math.atan2(y2 - y1, x2 - x1);
 }
 
 function App() {
-	const [angleErrorRange, setAngleErrorRange] = useState(Math.PI / 2); // 30 degrees error range
-	const [redirectInterval, setRedirectInterval] = useState(600);
+	const [angleErrorRange, setAngleErrorRange] = useState<number>(Math.PI / 2); // 30 degrees error range
+	const [redirectInterval, setRedirectInterval] = useState<number>(600);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
-	const gameLoopRef = useRef<number | null>(null);
-	const redirectIntervalRef = useRef<number | null>(null);
 
 	useEffect(() => {
+		let animationId: number;
 		const canvas = canvasRef.current;
 		if (!canvas) return;
 
@@ -56,7 +98,8 @@ function App() {
 			y: Math.random() * canvas.height,
 			radius: 20,
 			angle: 0,
-			speed: 2
+			speed: 2,
+			intendedDirection: 0,
 		};
 
 		const planet: Planet = {
@@ -66,7 +109,8 @@ function App() {
 		};
 
 		const obstacles: Obstacle[] = [];
-		const numObstacles = 350;
+		const numObstacles = 250;
+		rocket.intendedDirection = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
 
 		// Create obstacles
 		for (let i = 0; i < numObstacles; i++) {
@@ -76,17 +120,8 @@ function App() {
 				y: Math.random() * canvas.height,
 				radius: 13,
 				speed: 1,
-				angle: Math.random() * Math.PI * 2, // Random angle between 0 and 2π
+				angle: Math.random() * Math.PI * 2,
 			});
-		}
-
-		// Helper functions
-		function distance(x1: number, y1: number, x2: number, y2: number): number {
-			return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-		}
-
-		function calculateAngle(x1: number, y1: number, x2: number, y2: number): number {
-			return Math.atan2(y2 - y1, x2 - x1);
 		}
 
 		// New collision response function
@@ -113,18 +148,7 @@ function App() {
 			obj1.angle = (obj1.angle + 2 * Math.PI) % (2 * Math.PI);
 			obj2.angle = (obj2.angle + 2 * Math.PI) % (2 * Math.PI);
 
-			// Speeds remain unchanged
 		}
-
-		// Add these variables at the top of your script, with your other game objects
-		const directionIndicator: DirectionIndicator = {
-			angle: 0 // Store the intended direction
-		};
-
-		const rangeIndicator: RangeIndicator = {
-			angle: 0, // This will always point towards the planet
-			range: angleErrorRange,
-		};
 
 		// Main game loop
 		function gameLoop() {
@@ -197,13 +221,10 @@ function App() {
 			ctx.fill();
 
 			// Update range indicator to always point towards the planet
-			rangeIndicator.angle = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
+			let rangeIndicatorAngle = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
 
-			// Draw range indicator (behind the direction indicator)
-			drawRangeIndicator();
-
-			// Draw direction indicator
-			drawDirectionIndicator();
+      drawRangeIndicator(ctx, rocket.x, rocket.y, rangeIndicatorAngle, angleErrorRange);
+      drawDirectionIndicator(ctx, rocket.x, rocket.y, rocket.intendedDirection);
 
 			// Check for planet collision
 			if (distance(rocket.x, rocket.y, planet.x, planet.y) < rocket.radius + planet.radius) {
@@ -211,12 +232,12 @@ function App() {
 				resetGame();
 			}
 
-			gameLoopRef.current = requestAnimationFrame(gameLoop);
+			animationId = requestAnimationFrame(gameLoop);
 		}
 
 		// Redirect rocket periodically
 		function startRedirectInterval() {
-			redirectIntervalRef.current = setInterval(() => {
+			return setInterval(() => {
 				const targetAngle = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
 				const error = (Math.random() * 2 - 1) * (angleErrorRange / 2);
 				const intendedAngle = targetAngle + error;
@@ -225,7 +246,7 @@ function App() {
 				rocket.angle = intendedAngle;
 
 				// Update direction indicator
-				directionIndicator.angle = intendedAngle;
+				rocket.intendedDirection = intendedAngle;
 			}, redirectInterval);
 		}
 
@@ -238,50 +259,14 @@ function App() {
 			planet.y = Math.random() * canvas.height;
 		}
 
-		// Function to draw direction indicator
-		function drawDirectionIndicator() {
-			if (!ctx) return ;
-			ctx.save();
-			ctx.translate(rocket.x, rocket.y);
-			ctx.rotate(directionIndicator.angle);
-
-			ctx.beginPath();
-			ctx.moveTo(0, 0);
-			ctx.lineTo(40, 0);
-			ctx.lineTo(35, -7);
-			ctx.moveTo(40, 0);
-			ctx.lineTo(35, 7);
-			ctx.strokeStyle = 'orange';
-			ctx.lineWidth = 4;
-			ctx.stroke();
-
-			ctx.restore();
-		}
-
-		// Function to draw range indicator
-		function drawRangeIndicator() {
-			if (!ctx) return ;
-			ctx.save();
-			ctx.translate(rocket.x, rocket.y);
-			ctx.rotate(rangeIndicator.angle - rangeIndicator.range / 2);
-
-			ctx.beginPath();
-			ctx.moveTo(0, 0);
-			ctx.arc(0, 0, 70, 0, rangeIndicator.range);
-			ctx.fillStyle = 'rgba(143, 235, 52, 0.4)'; // Semi-transparent orange
-			ctx.fill();
-
-			ctx.restore();
-		}
-
 		// Start the game
 		gameLoop();
-		startRedirectInterval();
+		const intervalID = startRedirectInterval();
 
 		// Cleanup function
 		return () => {
-			if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
-			if (redirectIntervalRef.current) clearInterval(redirectIntervalRef.current);
+			cancelAnimationFrame(animationId);
+			clearInterval(intervalID);
 		};
 	}, [angleErrorRange, redirectInterval]);
 
