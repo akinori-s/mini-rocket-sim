@@ -37,11 +37,11 @@ function drawDirectionIndicator(
   ctx.rotate(angle);
 
   ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(40, 0);
-  ctx.lineTo(35, -7);
-  ctx.moveTo(40, 0);
-  ctx.lineTo(35, 7);
+  ctx.moveTo(30, 0);
+  ctx.lineTo(50, 0);
+  ctx.lineTo(45, -7);
+  ctx.moveTo(50, 0);
+  ctx.lineTo(45, 7);
   ctx.strokeStyle = 'orange';
   ctx.lineWidth = 4;
   ctx.stroke();
@@ -81,6 +81,8 @@ function App() {
 	const [angleErrorRange, setAngleErrorRange] = useState<number>(Math.PI / 2);
 	const [redirectInterval, setRedirectInterval] = useState<number>(600);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
+	const marsImageRef = useRef<HTMLImageElement | null>(null);
+	const rocketImageRef = useRef<HTMLImageElement | null>(null);
 
 	useEffect(() => {
 		let animationId: number;
@@ -92,6 +94,13 @@ function App() {
 
 		canvas.width = 1500;
 		canvas.height = 1000;
+
+		const marsImage = new Image();
+    marsImage.src = '/mars.svg'; // Assuming the SVG is in the public folder
+    marsImageRef.current = marsImage;
+		const rocketImage = new Image();
+    rocketImage.src = '/capsule.svg'; // Assuming the SVG is in the public folder
+    rocketImageRef.current = rocketImage;
 
 		// Game objects
 		const rocket: Rocket = {
@@ -232,17 +241,45 @@ function App() {
 				ctx.fill();
 			}
 
-			// Draw planet
-			ctx.fillStyle = 'blue';
-			ctx.beginPath();
-			ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
-			ctx.fill();
+			// Draw planet (Mars)
+			if (marsImageRef.current && marsImageRef.current.complete) {
+				const imageSize = planet.radius * 2;
+				ctx.drawImage(
+					marsImageRef.current,
+					planet.x - planet.radius,
+					planet.y - planet.radius,
+					imageSize,
+					imageSize
+				);
+			} else {
+				// Fallback to circle if image is not loaded
+				ctx.fillStyle = 'red';
+				ctx.beginPath();
+				ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
+				ctx.fill();
+			}
 
-			// Draw rocket
-			ctx.fillStyle = 'red';
-			ctx.beginPath();
-			ctx.arc(rocket.x, rocket.y, rocket.radius, 0, Math.PI * 2);
-			ctx.fill();
+			// Draw rocket (Capsule)
+			if (rocketImageRef.current && rocketImageRef.current.complete) {
+				const imageSize = rocket.radius * 2;
+				ctx.save();
+				ctx.translate(rocket.x, rocket.y);
+				ctx.rotate(rocket.angle + Math.PI / 2);
+				ctx.drawImage(
+					rocketImageRef.current,
+					-rocket.radius,
+					-rocket.radius,
+					imageSize,
+					imageSize
+				);
+				ctx.restore();
+			} else {
+				// Fallback to circle if image is not loaded
+				ctx.fillStyle = 'red';
+				ctx.beginPath();
+				ctx.arc(rocket.x, rocket.y, rocket.radius, 0, Math.PI * 2);
+				ctx.fill();
+			}
 
 			// Draw rocket trail
 			ctx.beginPath();
