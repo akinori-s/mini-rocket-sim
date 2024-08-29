@@ -84,9 +84,12 @@ function App() {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const marsImageRef = useRef<HTMLImageElement | null>(null);
 	const rocketImageRef = useRef<HTMLImageElement | null>(null);
+	const [timer, setTimer] = useState<number>(0);
+	const [isGameRunning, setIsGameRunning] = useState<boolean>(true);
 
 	useEffect(() => {
 		let animationId: number;
+		let startTime: number;
 		const canvas = canvasRef.current;
 		if (!canvas) return;
 
@@ -303,9 +306,18 @@ function App() {
       drawRangeIndicator(ctx, rocket.x, rocket.y, rangeIndicatorAngle, angleErrorRange);
       // drawDirectionIndicator(ctx, rocket.x, rocket.y, rocket.intendedDirection);
 
+			// Update timer
+			if (isGameRunning) {
+				const currentTime = Date.now();
+				const elapsedTime = (currentTime - startTime) / 1000; // Convert to seconds
+				setTimer(elapsedTime);
+			}
+
 			// Check for planet collision
 			if (distance(rocket.x, rocket.y, planet.x, planet.y) < rocket.radius + planet.radius) {
-				alert('Rocket reached the planet!');
+				setIsGameRunning(false);
+				const finalTime = (Date.now() - startTime) / 1000;
+				alert(`Rocket reached the planet in ${finalTime.toFixed(2)} seconds!`);
 				resetGame();
 			}
 
@@ -335,9 +347,13 @@ function App() {
 			rocket.trail = []; // Clear the trail when resetting
 			planet.x = canvas.width * 4 / 5;
 			planet.y = canvas.height / 2;
+			setTimer(0);
+			setIsGameRunning(true);
+			startTime = Date.now();
 		}
 
 		// Start the game
+		resetGame();
 		gameLoop();
 		const intervalID = startRedirectInterval();
 
@@ -358,6 +374,8 @@ function App() {
 
 	const handleRestart = () => {
 		setKey(prevKey => prevKey + 1);
+		setIsGameRunning(true);
+		setTimer(0);
 	};
 
 	return (
@@ -365,6 +383,7 @@ function App() {
 			<h1>Mini Rocket Sim</h1>
 			<canvas ref={canvasRef} id="gameCanvas"></canvas>
 			<div className="mt-5 flex flex-col items-center">
+				<p className="mb-2.5">Time: {timer.toFixed(2)} seconds</p>
 				<label className="flex items-center mb-2.5">
 					Error Range (degrees):
 					<input
