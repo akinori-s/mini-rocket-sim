@@ -26,47 +26,9 @@ interface Obstacle {
 	angle: number;
 }
 
-function drawDirectionIndicator(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  angle: number
-) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(angle);
-
-  ctx.beginPath();
-  ctx.moveTo(40, 0);
-  ctx.lineTo(60, 0);
-  ctx.lineTo(55, -7);
-  ctx.moveTo(60, 0);
-  ctx.lineTo(55, 7);
-  ctx.strokeStyle = 'orange';
-  ctx.lineWidth = 4;
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-function drawRangeIndicator(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  angle: number,
-  range: number
-) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(angle - range / 2);
-
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.arc(0, 0, 70, 0, range);
-  ctx.fillStyle = 'rgba(143, 235, 52, 0.22)';
-  ctx.fill();
-
-  ctx.restore();
+interface GameProps {
+	initialAngleErrorRange: number;
+	initialRedirectInterval: number;
 }
 
 function distance(x1: number, y1: number, x2: number, y2: number): number {
@@ -77,9 +39,52 @@ function calculateAngle(x1: number, y1: number, x2: number, y2: number): number 
 	return Math.atan2(y2 - y1, x2 - x1);
 }
 
-function App() {
-	const [angleErrorRange, setAngleErrorRange] = useState<number>(Math.PI / 2);
-	const [redirectInterval, setRedirectInterval] = useState<number>(600);
+function drawDirectionIndicator(
+	ctx: CanvasRenderingContext2D,
+	x: number,
+	y: number,
+	angle: number
+) {
+	ctx.save();
+	ctx.translate(x, y);
+	ctx.rotate(angle);
+
+	ctx.beginPath();
+	ctx.moveTo(40, 0);
+	ctx.lineTo(60, 0);
+	ctx.lineTo(55, -7);
+	ctx.moveTo(60, 0);
+	ctx.lineTo(55, 7);
+	ctx.strokeStyle = 'orange';
+	ctx.lineWidth = 4;
+	ctx.stroke();
+
+	ctx.restore();
+}
+
+function drawRangeIndicator(
+	ctx: CanvasRenderingContext2D,
+	x: number,
+	y: number,
+	angle: number,
+	range: number
+) {
+	ctx.save();
+	ctx.translate(x, y);
+	ctx.rotate(angle - range / 2);
+
+	ctx.beginPath();
+	ctx.moveTo(0, 0);
+	ctx.arc(0, 0, 70, 0, range);
+	ctx.fillStyle = 'rgba(143, 235, 52, 0.22)';
+	ctx.fill();
+
+	ctx.restore();
+}
+
+function Game({ initialAngleErrorRange, initialRedirectInterval }: GameProps) {
+	const [angleErrorRange, setAngleErrorRange] = useState<number>(initialAngleErrorRange);
+	const [redirectInterval, setRedirectInterval] = useState<number>(initialRedirectInterval);
 	const [key, setKey] = useState<number>(0);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const marsImageRef = useRef<HTMLImageElement | null>(null);
@@ -100,19 +105,19 @@ function App() {
 		canvas.height = 600;
 
 		const marsImage = new Image();
-    marsImage.src = '/mars.svg'; // Assuming the SVG is in the public folder
-    marsImageRef.current = marsImage;
+		marsImage.src = '/mars.svg'; // Assuming the SVG is in the public folder
+		marsImageRef.current = marsImage;
 		const rocketImage = new Image();
-    rocketImage.src = '/capsule.svg'; // Assuming the SVG is in the public folder
-    rocketImageRef.current = rocketImage;
+		rocketImage.src = '/capsule.svg'; // Assuming the SVG is in the public folder
+		rocketImageRef.current = rocketImage;
 
 		// Game objects
 		const rocket: Rocket = {
 			x: canvas.width * 1 / 5,
 			y: canvas.height / 2,
-			radius: 35,
+			radius: 30,
 			angle: 0,
-			speed: 2.1,
+			speed: 1.8,
 			intendedDirection: 0,
 			trail: [],
 		};
@@ -124,7 +129,7 @@ function App() {
 		};
 
 		const obstacles: Obstacle[] = [];
-		const numObstacles = 170;
+		const numObstacles = 150;
 		rocket.intendedDirection = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
 
 		// Create obstacles
@@ -133,8 +138,8 @@ function App() {
 				id: i,
 				x: Math.random() * canvas.width,
 				y: Math.random() * canvas.height,
-				radius: 6,
-				speed: 1.2,
+				radius: 4.5,
+				speed: 0.8,
 				angle: Math.random() * Math.PI * 2,
 			});
 		}
@@ -303,8 +308,8 @@ function App() {
 			// Update range indicator to always point towards the planet
 			let rangeIndicatorAngle = calculateAngle(rocket.x, rocket.y, planet.x, planet.y);
 
-      drawRangeIndicator(ctx, rocket.x, rocket.y, rangeIndicatorAngle, angleErrorRange);
-      // drawDirectionIndicator(ctx, rocket.x, rocket.y, rocket.intendedDirection);
+			drawRangeIndicator(ctx, rocket.x, rocket.y, rangeIndicatorAngle, angleErrorRange);
+			// drawDirectionIndicator(ctx, rocket.x, rocket.y, rocket.intendedDirection);
 
 			// Update timer
 			if (isGameRunning) {
@@ -379,12 +384,11 @@ function App() {
 	};
 
 	return (
-		<>
-			<h1>Mini Rocket Sim</h1>
+		<div className="m-6">
 			<canvas ref={canvasRef} id="gameCanvas"></canvas>
-			<div className="mt-5 flex flex-col items-center">
-				<p className="mb-2.5">Time: {timer.toFixed(2)} seconds</p>
-				<label className="flex items-center mb-2.5">
+			<div className="flex flex-col">
+				<p>Time: {timer.toFixed(2)} seconds</p>
+				<label>
 					Error Range (degrees):
 					<input
 						type="range"
@@ -396,7 +400,7 @@ function App() {
 					/>
 					{((angleErrorRange * 180) / Math.PI).toFixed(1)}°
 				</label>
-				<label className="flex items-center mb-2.5">
+				<label>
 					Redirect Interval (ms):
 					<input
 						type="range"
@@ -412,6 +416,20 @@ function App() {
 				<button onClick={handleRestart} className="mt-2.5 px-4 py-2 bg-blue-500 text-white rounded">
 					Restart Game
 				</button>
+			</div>
+		</div>
+	);
+}
+
+function App() {
+	return (
+		<>
+			<div className='flex flex-col p-4 items-center'>
+				<h1>Mini Rocket Sim</h1>
+				<div className="flex flex-wrap justfy-around">
+					<Game initialAngleErrorRange={Math.PI / 4} initialRedirectInterval={500} />
+					<Game initialAngleErrorRange={Math.PI / 2} initialRedirectInterval={1000} />
+				</div>
 			</div>
 		</>
 	);
