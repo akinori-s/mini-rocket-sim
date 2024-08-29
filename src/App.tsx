@@ -29,6 +29,7 @@ interface Obstacle {
 interface GameProps {
 	initialAngleErrorRange: number;
 	initialRedirectInterval: number;
+	counter: number;
 }
 
 function distance(x1: number, y1: number, x2: number, y2: number): number {
@@ -82,10 +83,10 @@ function drawRangeIndicator(
 	ctx.restore();
 }
 
-function Game({ initialAngleErrorRange, initialRedirectInterval }: GameProps) {
+function Game({ initialAngleErrorRange, initialRedirectInterval, counter }: GameProps) {
 	const [angleErrorRange, setAngleErrorRange] = useState<number>(initialAngleErrorRange);
 	const [redirectInterval, setRedirectInterval] = useState<number>(initialRedirectInterval);
-	const [key, setKey] = useState<number>(0);
+	// const [key, setKey] = useState<number>(0);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const marsImageRef = useRef<HTMLImageElement | null>(null);
 	const rocketImageRef = useRef<HTMLImageElement | null>(null);
@@ -365,7 +366,7 @@ function Game({ initialAngleErrorRange, initialRedirectInterval }: GameProps) {
 			cancelAnimationFrame(animationId);
 			clearInterval(intervalID);
 		};
-	}, [key]);
+	}, [counter]);
 
 	const handleErrorRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setAngleErrorRange((parseFloat(e.target.value) * Math.PI) / 180);
@@ -375,11 +376,11 @@ function Game({ initialAngleErrorRange, initialRedirectInterval }: GameProps) {
 		setRedirectInterval(parseFloat(e.target.value));
 	};
 
-	const handleRestart = () => {
-		setKey(prevKey => prevKey + 1);
-		setIsGameRunning(true);
-		setTimer(0);
-	};
+	// const handleRestart = () => {
+	// 	setKey(prevKey => prevKey + 1);
+	// 	setIsGameRunning(true);
+	// 	setTimer(0);
+	// };
 
 	return (
 		<div className="m-6">
@@ -417,23 +418,34 @@ function Game({ initialAngleErrorRange, initialRedirectInterval }: GameProps) {
 					/>
 					{redirectInterval}ms
 				</label>
-				<button onClick={handleRestart} className="mt-2.5 px-4 py-2 bg-blue-500 text-white rounded">
+				{/* <button onClick={handleRestart} className="mt-2.5 px-4 py-2 bg-blue-500 text-white rounded">
 					Restart Game
-				</button>
+				</button> */}
 			</div>
 		</div>
 	);
 }
 
 function App() {
+	const [key1, setKey1] = useState<number>(0);
+	const [key2, setKey2] = useState<number>(0);
+
+	const handleRestart = () => {
+		setKey1(prevKey => prevKey + 1);
+		setKey2(prevKey => prevKey + 1);
+	};
+
 	return (
 		<>
 			<div className='flex flex-col p-4 items-center'>
 				<h1>Mini Rocket Sim</h1>
 				<div className="flex flex-wrap justfy-around">
-					<Game initialAngleErrorRange={Math.PI / 4} initialRedirectInterval={500} />
-					<Game initialAngleErrorRange={Math.PI / 2} initialRedirectInterval={1000} />
+					<Game initialAngleErrorRange={Math.PI / 4} initialRedirectInterval={500} counter={key1}/>
+					<Game initialAngleErrorRange={Math.PI / 2} initialRedirectInterval={1000} counter={key2}/>
 				</div>
+				<button onClick={handleRestart} className="mt-2.5 px-4 py-2 bg-blue-500 text-white rounded">
+					Restart Game
+				</button>
 			</div>
 		</>
 	);
