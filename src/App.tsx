@@ -170,7 +170,7 @@ function Game({ initialAngleErrorRange, initialRedirectInterval }: GameProps) {
 
 		// Main game loop
 		function gameLoop() {
-			if (!canvas || !ctx) return;
+			if (!canvas || !ctx || !isGameRunning) return;
 
 			// Clear canvas
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -321,9 +321,7 @@ function Game({ initialAngleErrorRange, initialRedirectInterval }: GameProps) {
 			// Check for planet collision
 			if (distance(rocket.x, rocket.y, planet.x, planet.y) < rocket.radius + planet.radius) {
 				setIsGameRunning(false);
-				const finalTime = (Date.now() - startTime) / 1000;
-				alert(`Rocket reached the planet in ${finalTime.toFixed(2)} seconds!`);
-				resetGame();
+				return ;
 			}
 
 			animationId = requestAnimationFrame(gameLoop);
@@ -388,6 +386,12 @@ function Game({ initialAngleErrorRange, initialRedirectInterval }: GameProps) {
 			<canvas ref={canvasRef} id="gameCanvas"></canvas>
 			<div className="flex flex-col">
 				<p>Time: {timer.toFixed(2)} seconds</p>
+				{
+					!isGameRunning &&
+					<div>
+						TADA!
+					</div>
+				}
 				<label>
 					Error Range (degrees):
 					<input
