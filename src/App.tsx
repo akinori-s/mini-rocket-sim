@@ -80,6 +80,7 @@ function calculateAngle(x1: number, y1: number, x2: number, y2: number): number 
 function App() {
 	const [angleErrorRange, setAngleErrorRange] = useState<number>(Math.PI / 2);
 	const [redirectInterval, setRedirectInterval] = useState<number>(600);
+	const [key, setKey] = useState<number>(0);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const marsImageRef = useRef<HTMLImageElement | null>(null);
 	const rocketImageRef = useRef<HTMLImageElement | null>(null);
@@ -92,8 +93,8 @@ function App() {
 		const ctx = canvas.getContext('2d');
 		if (!ctx) return;
 
-		canvas.width = 1500;
-		canvas.height = 1000;
+		canvas.width = 1000;
+		canvas.height = 600;
 
 		const marsImage = new Image();
     marsImage.src = '/mars.svg'; // Assuming the SVG is in the public folder
@@ -345,7 +346,7 @@ function App() {
 			cancelAnimationFrame(animationId);
 			clearInterval(intervalID);
 		};
-	}, [angleErrorRange, redirectInterval]);
+	}, [key]);
 
 	const handleErrorRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setAngleErrorRange((parseFloat(e.target.value) * Math.PI) / 180);
@@ -353,6 +354,10 @@ function App() {
 
 	const handleIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setRedirectInterval(parseFloat(e.target.value));
+	};
+
+	const handleRestart = () => {
+		setKey(prevKey => prevKey + 1);
 	};
 
 	return (
@@ -385,6 +390,9 @@ function App() {
 					/>
 					{redirectInterval}ms
 				</label>
+				<button onClick={handleRestart} className="mt-2.5 px-4 py-2 bg-blue-500 text-white rounded">
+					Restart Game
+				</button>
 			</div>
 		</>
 	);
