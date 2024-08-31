@@ -116,7 +116,7 @@ function Game({ initialAngleErrorRange, initialRedirectInterval, counter }: Game
 		const rocket: Rocket = {
 			x: canvas.width * 1 / 5,
 			y: canvas.height / 2,
-			radius: 30,
+			radius: 22,
 			angle: 0,
 			speed: 1.8,
 			intendedDirection: 0,
@@ -369,11 +369,17 @@ function Game({ initialAngleErrorRange, initialRedirectInterval, counter }: Game
 	}, [counter]);
 
 	const handleErrorRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setAngleErrorRange((parseFloat(e.target.value) * Math.PI) / 180);
+		const value = parseFloat(e.target.value);
+		const step = 10;
+		const roundedValue = Math.round(value / step) * step;
+		setAngleErrorRange((roundedValue * Math.PI) / 180);
 	};
 
 	const handleIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setRedirectInterval(parseFloat(e.target.value));
+		const value = parseFloat(e.target.value);
+		const step = 200;
+		const roundedValue = Math.round(value / step) * step;
+		setRedirectInterval(roundedValue);
 	};
 
 	// const handleRestart = () => {
@@ -399,6 +405,7 @@ function Game({ initialAngleErrorRange, initialRedirectInterval, counter }: Game
 						type="range"
 						min="0"
 						max="180"
+						step="10"
 						value={(angleErrorRange * 180) / Math.PI}
 						onChange={handleErrorRangeChange}
 						className="mx-2.5"
@@ -409,9 +416,9 @@ function Game({ initialAngleErrorRange, initialRedirectInterval, counter }: Game
 					Redirect Interval (ms):
 					<input
 						type="range"
-						min="100"
+						min="200"
 						max="2000"
-						step="100"
+						step="200"
 						value={redirectInterval}
 						onChange={handleIntervalChange}
 						className="mx-2.5"
@@ -440,8 +447,8 @@ function App() {
 			<div className='flex flex-col p-4 items-center'>
 				<h1>Mini Rocket Sim</h1>
 				<div className="flex flex-wrap justfy-around">
-					<Game initialAngleErrorRange={Math.PI / 4} initialRedirectInterval={500} counter={key1}/>
-					<Game initialAngleErrorRange={Math.PI / 2} initialRedirectInterval={1000} counter={key2}/>
+					<Game initialAngleErrorRange={Math.PI / 2} initialRedirectInterval={500} counter={key1}/>
+					<Game initialAngleErrorRange={Math.PI / 4} initialRedirectInterval={1000} counter={key2}/>
 				</div>
 				<button onClick={handleRestart} className="mt-2.5 px-4 py-2 bg-blue-500 text-white rounded">
 					Restart Game
