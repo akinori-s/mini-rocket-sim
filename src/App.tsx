@@ -389,18 +389,24 @@ function Game({ initialAngleErrorRange, initialRedirectInterval, counter }: Game
 	// };
 
 	return (
-		<div className="m-6">
-			<canvas ref={canvasRef} id="gameCanvas"></canvas>
-			<div className="flex flex-col">
-				<p>Time: {timer.toFixed(2)} seconds</p>
+		<div className="relative m-6">
+			<div className="relative">
+				<canvas ref={canvasRef} id="gameCanvas" className="border border-gray-100 rounded-lg shadow-md"></canvas>
 				{
 					!isGameRunning &&
-					<div>
-						TADA!
+					<div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center bg-black bg-opacity-40 rounded-lg">
+						<div className="text-2xl font-bold text-white">
+							Mars reached!
+						</div>
 					</div>
 				}
-				<label>
-					Error Range (degrees):
+			</div>
+			<div className="flex flex-col mt-4 space-y-4 px-20">
+				<div className="text-lg font-semibold self-center">
+					Time: <span className="text-blue-600">{timer.toFixed(2)}</span> seconds
+				</div>
+				<label className="flex items-center space-x-2">
+					<span className="font-medium">Error Range (degrees):</span>
 					<input
 						type="range"
 						min="0"
@@ -408,12 +414,12 @@ function Game({ initialAngleErrorRange, initialRedirectInterval, counter }: Game
 						step="10"
 						value={(angleErrorRange * 180) / Math.PI}
 						onChange={handleErrorRangeChange}
-						className="mx-2.5"
+						className="flex-grow"
 					/>
-					{((angleErrorRange * 180) / Math.PI).toFixed(1)}°
+					<span className="text-blue-600">{((angleErrorRange * 180) / Math.PI).toFixed(1)}°</span>
 				</label>
-				<label>
-					Redirect Interval (ms):
+				<label className="flex items-center space-x-2">
+					<span className="font-medium">Redirect Interval (ms):</span>
 					<input
 						type="range"
 						min="200"
@@ -421,9 +427,9 @@ function Game({ initialAngleErrorRange, initialRedirectInterval, counter }: Game
 						step="200"
 						value={redirectInterval}
 						onChange={handleIntervalChange}
-						className="mx-2.5"
+						className="flex-grow"
 					/>
-					{redirectInterval}ms
+					<span className="text-blue-600">{redirectInterval}ms</span>
 				</label>
 				{/* <button onClick={handleRestart} className="mt-2.5 px-4 py-2 bg-blue-500 text-white rounded">
 					Restart Game
@@ -445,12 +451,12 @@ function App() {
 	return (
 		<>
 			<div className='flex flex-col p-4 items-center'>
-				<h1>Mini Rocket Sim</h1>
+				<h1 className='text-2xl font-medium my-4'>Mini Rocket Sim</h1>
 				<div className="flex flex-wrap justfy-around">
 					<Game initialAngleErrorRange={Math.PI / 2} initialRedirectInterval={500} counter={key1}/>
 					<Game initialAngleErrorRange={Math.PI / 4} initialRedirectInterval={1000} counter={key2}/>
 				</div>
-				<button onClick={handleRestart} className="mt-2.5 px-4 py-2 bg-blue-500 text-white rounded">
+				<button onClick={handleRestart} className="mt-2.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded">
 					Restart Game
 				</button>
 			</div>
